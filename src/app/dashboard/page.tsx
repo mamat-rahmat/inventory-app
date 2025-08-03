@@ -117,33 +117,7 @@ export default function DashboardPage() {
         />
       </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-        <Card>
-          <CardBody>
-            <Heading size="md" mb={4}>Recent Activity</Heading>
-            <Text>No recent activities to display.</Text>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardBody>
-            <Heading size="md" mb={4}>Quick Actions</Heading>
-            <SimpleGrid columns={2} spacing={4}>
-              <Button variant="outline" onClick={() => router.push('/inventory/add')}>
-                Add New Item
-              </Button>
-              <Button variant="outline">
-                Generate Report
-              </Button>
-              <Button variant="outline">
-                Manage Categories
-              </Button>
-              <Button variant="outline">
-                View Orders
-              </Button>
-            </SimpleGrid>
-          </CardBody>
-        </Card>
-      </SimpleGrid>
+
     </Container>
   );
 }
