@@ -8,7 +8,7 @@ This project was created to fulfill the assignment for Jabar Digital Academy Fin
 
 - **🔐 User Authentication**: Secure login system using NextAuth
 - **📊 Real-time Dashboard**: Live inventory statistics and analytics
-- **📦 Inventory Management**: Full CRUD operations for inventory items
+- **📦 Inventory & Category Management**: Full CRUD operations for inventory items and categories
 - **🔍 Search & Filter**: Advanced search and category filtering
 - **📱 Responsive Design**: Optimized for desktop and mobile devices
 - **🗄️ Database Integration**: PostgreSQL with Neon for scalable data storage
