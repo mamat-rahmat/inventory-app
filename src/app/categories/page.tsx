@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 import {
   Container,
   Heading,
@@ -264,7 +265,9 @@ export default function CategoriesPage() {
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
+    <>
+      <Navbar />
+      <Container maxW="container.xl" py={8}>
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
         <Box>
           <Heading as="h1" size="xl">Categories</Heading>
@@ -454,5 +457,6 @@ export default function CategoriesPage() {
         </AlertDialogOverlay>
       </AlertDialog>
     </Container>
+    </>
   );
 }
