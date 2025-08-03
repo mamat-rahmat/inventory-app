@@ -2,6 +2,8 @@
 
 A modern, full-stack inventory management application built with Next.js, NextAuth, Chakra UI, and Neon PostgreSQL. This application provides a complete solution for tracking, managing, and optimizing inventory with real-time updates and an intuitive interface.
 
+This project was created to fulfill the assignment for Jabar Digital Academy Final Project.
+
 ## ✨ Features
 
 - **🔐 User Authentication**: Secure login system using NextAuth
