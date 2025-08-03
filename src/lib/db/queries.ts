@@ -24,6 +24,14 @@ export interface InventoryItem {
   user_id: number;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // User queries
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
@@ -201,6 +209,96 @@ export async function getInventoryStats(userId?: number): Promise<{
     };
   } catch (error) {
     console.error('Error fetching inventory stats:', error);
+    throw error;
+  }
+}
+
+// Category queries
+export async function getAllCategories(): Promise<Category[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM categories 
+      ORDER BY name ASC
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+}
+
+export async function getCategoryById(id: number): Promise<Category | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM categories 
+      WHERE id = ${id}
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error fetching category by id:', error);
+    throw error;
+  }
+}
+
+export async function createCategory(category: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<Category> {
+  try {
+    const result = await sql`
+      INSERT INTO categories (name, description)
+      VALUES (${category.name}, ${category.description || ''})
+      RETURNING *
+    `;
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error creating category:', error);
+    throw error;
+  }
+}
+
+export async function updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'created_at' | 'updated_at'>>): Promise<Category | null> {
+  try {
+    const fields = Object.keys(updates).filter(key => updates[key as keyof typeof updates] !== undefined);
+    
+    if (fields.length === 0) {
+      throw new Error('No valid updates provided');
+    }
+
+    const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+    const values = [id, ...fields.map(field => updates[field as keyof typeof updates])];
+    
+    const query = `
+      UPDATE categories 
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    const result = await executeQuery(query, values);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error updating category:', error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(id: number): Promise<boolean> {
+  try {
+    // Check if category is being used by any inventory items
+    const usageCheck = await sql`
+      SELECT COUNT(*) as count FROM inventory_items 
+      WHERE category = (SELECT name FROM categories WHERE id = ${id})
+    `;
+    
+    if (parseInt(usageCheck.rows[0]?.count || '0') > 0) {
+      throw new Error('Cannot delete category that is being used by inventory items');
+    }
+    
+    const result = await sql`
+      DELETE FROM categories 
+      WHERE id = ${id}
+    `;
+    return (result.rowCount || 0) > 0;
+  } catch (error) {
+    console.error('Error deleting category:', error);
     throw error;
   }
 }

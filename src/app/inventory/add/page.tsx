@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
@@ -24,13 +24,15 @@ import {
   CardBody,
   FormErrorMessage,
 } from '@chakra-ui/react';
-
-const categories = ['Electronics', 'Office Supplies', 'Furniture', 'Clothing', 'Food', 'Other'];
+import { Category } from '@/types';
 
 export default function AddInventoryItemPage() {
   const { status } = useSession();
   const router = useRouter();
   const toast = useToast();
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -50,6 +52,37 @@ export default function AddInventoryItemPage() {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await fetch('/api/categories');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchCategories();
+    }
+  }, [status, fetchCategories]);
 
   if (status === 'loading') {
     return (
@@ -210,10 +243,11 @@ export default function AddInventoryItemPage() {
                   name="category" 
                   value={formData.category} 
                   onChange={handleChange}
-                  placeholder="Select category"
+                  placeholder={loadingCategories ? "Loading categories..." : "Select category"}
+                  disabled={loadingCategories}
                 >
                   {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <option key={category.id} value={category.name}>{category.name}</option>
                   ))}
                 </Select>
                 {errors.category && <FormErrorMessage>{errors.category}</FormErrorMessage>}

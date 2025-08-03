@@ -24,15 +24,41 @@ CREATE TABLE IF NOT EXISTS inventory_items (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Create categories table
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create index for better performance
 CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku);
 CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category);
 CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
 
 -- Insert a default admin user (password: 'password' - should be hashed in production)
 INSERT INTO users (email, password_hash, name, role) 
 VALUES ('admin@example.com', '$2b$10$rQZ9QmjytWzQgwjvtpfzKOXbnon9hGrVhGGGGGGGGGGGGGGGGGGGGG', 'Admin User', 'admin')
 ON CONFLICT (email) DO NOTHING;
+
+-- Insert sample categories
+INSERT INTO categories (name, description) VALUES
+('Electronics', 'Electronic devices and gadgets'),
+('Furniture', 'Office and home furniture'),
+('Stationery', 'Office supplies and stationery items'),
+('Clothing', 'Apparel and accessories'),
+('Books', 'Books and educational materials'),
+('Home & Garden', 'Home improvement and gardening supplies'),
+('Sports', 'Sports equipment and accessories'),
+('Toys', 'Toys and games'),
+('Food & Beverages', 'Food items and beverages'),
+('Health & Beauty', 'Health and beauty products'),
+('Automotive', 'Automotive parts and accessories'),
+('Office Supplies', 'General office supplies')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert some sample inventory items
 INSERT INTO inventory_items (name, sku, category, quantity, price, description, status, user_id) VALUES

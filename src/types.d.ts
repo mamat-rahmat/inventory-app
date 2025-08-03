@@ -46,3 +46,12 @@ export interface UserRecord {
 export interface InventoryRecord extends InventoryItem {
   user_id: number; // Reference to the user who created/owns the item
 }
+
+// Category type (matches database schema)
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}

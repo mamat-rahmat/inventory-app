@@ -24,6 +24,7 @@ import {
   useToast,
   Text,
 } from '@chakra-ui/react';
+import { Category } from '@/types';
 
 interface FormData {
   name: string;
@@ -42,25 +43,14 @@ interface FormErrors {
   price?: string;
 }
 
-const categories = [
-  'Electronics',
-  'Clothing',
-  'Books',
-  'Home & Garden',
-  'Sports',
-  'Toys',
-  'Food & Beverages',
-  'Health & Beauty',
-  'Automotive',
-  'Office Supplies'
-];
-
 export default function EditInventoryPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const params = useParams();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>({
@@ -71,6 +61,31 @@ export default function EditInventoryPage() {
     price: 0,
     description: ''
   });
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await fetch('/api/categories');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [toast]);
 
   const fetchItem = useCallback(async () => {
     try {
@@ -107,9 +122,10 @@ export default function EditInventoryPage() {
 
   useEffect(() => {
     if (status === 'authenticated' && params.id) {
+      fetchCategories();
       fetchItem();
     }
-  }, [status, params.id, fetchItem]);
+  }, [status, params.id, fetchItem, fetchCategories]);
 
   if (status === 'loading' || loading) {
     return (
@@ -263,10 +279,11 @@ export default function EditInventoryPage() {
                   name="category" 
                   value={formData.category} 
                   onChange={handleChange}
-                  placeholder="Select category"
+                  placeholder={loadingCategories ? "Loading categories..." : "Select category"}
+                  disabled={loadingCategories}
                 >
                   {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <option key={category.id} value={category.name}>{category.name}</option>
                   ))}
                 </Select>
                 {errors.category && <FormErrorMessage>{errors.category}</FormErrorMessage>}

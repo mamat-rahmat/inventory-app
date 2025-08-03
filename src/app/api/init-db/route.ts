@@ -34,16 +34,46 @@ export async function POST() {
       )
     `);
 
+    // Create categories table
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create indexes
     await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku)');
     await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)');
     await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)');
 
     // Insert default admin user (password: 'password' - hashed with bcrypt)
     await executeQuery(`
       INSERT INTO users (email, password_hash, name, role) 
       VALUES ('admin@example.com', '$2b$10$rQZ9QmjytWzQgwjvtpfzKOXbnon9hGrVhGGGGGGGGGGGGGGGGGGGGG', 'Admin User', 'admin')
       ON CONFLICT (email) DO NOTHING
+    `);
+
+    // Insert sample categories
+    await executeQuery(`
+      INSERT INTO categories (name, description) VALUES
+      ('Electronics', 'Electronic devices and gadgets'),
+      ('Furniture', 'Office and home furniture'),
+      ('Stationery', 'Office supplies and stationery items'),
+      ('Clothing', 'Apparel and accessories'),
+      ('Books', 'Books and educational materials'),
+      ('Home & Garden', 'Home improvement and gardening supplies'),
+      ('Sports', 'Sports equipment and accessories'),
+      ('Toys', 'Toys and games'),
+      ('Food & Beverages', 'Food items and beverages'),
+      ('Health & Beauty', 'Health and beauty products'),
+      ('Automotive', 'Automotive parts and accessories'),
+      ('Office Supplies', 'General office supplies')
+      ON CONFLICT (name) DO NOTHING
     `);
 
     // Insert sample inventory items
@@ -59,8 +89,8 @@ export async function POST() {
 
     return NextResponse.json({ 
       message: 'Database initialized successfully',
-      tables: ['users', 'inventory_items'],
-      sampleData: 'Added admin user and 5 sample inventory items'
+      tables: ['users', 'inventory_items', 'categories'],
+      sampleData: 'Added admin user, 5 sample inventory items, and 12 sample categories'
     });
   } catch (error) {
     console.error('Error initializing database:', error);
