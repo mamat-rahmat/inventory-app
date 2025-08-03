@@ -8,7 +8,8 @@ const pool = new Pool({
   },
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
+  query_timeout: 30000,
 });
 
 // Template literal function for SQL queries (similar to neon's sql``)

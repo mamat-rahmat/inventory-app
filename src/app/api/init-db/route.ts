@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db/neon';
+import bcrypt from 'bcryptjs';
 
 // POST /api/init-db - Initialize database with schema and sample data
 export async function POST() {
@@ -52,11 +53,12 @@ export async function POST() {
     await executeQuery('CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)');
 
     // Insert default admin user (password: 'password' - hashed with bcrypt)
+    const adminPasswordHash = await bcrypt.hash('password', 12);
     await executeQuery(`
       INSERT INTO users (email, password_hash, name, role) 
-      VALUES ('admin@example.com', '$2b$10$rQZ9QmjytWzQgwjvtpfzKOXbnon9hGrVhGGGGGGGGGGGGGGGGGGGGG', 'Admin User', 'admin')
+      VALUES ('admin@example.com', $1, 'Admin User', 'admin')
       ON CONFLICT (email) DO NOTHING
-    `);
+    `, [adminPasswordHash]);
 
     // Insert sample categories
     await executeQuery(`

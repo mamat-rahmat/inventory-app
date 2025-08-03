@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import NextLink from 'next/link';
 import {
   Box,
   Button,
@@ -16,6 +17,8 @@ import {
   Container,
   Card,
   CardBody,
+  Link,
+  HStack,
 } from '@chakra-ui/react';
 
 export default function LoginPage() {
@@ -101,9 +104,16 @@ export default function LoginPage() {
                   Sign In
                 </Button>
                 
-                <Text fontSize="sm">
+                <Text fontSize="sm" color="gray.600">
                   Demo credentials: admin@example.com / password
                 </Text>
+                
+                <HStack spacing={1}>
+                  <Text fontSize="sm">Don't have an account?</Text>
+                  <Link as={NextLink} href="/register" color="blue.500" fontSize="sm">
+                    Create one here
+                  </Link>
+                </HStack>
               </VStack>
             </Box>
           </VStack>

@@ -114,20 +114,33 @@ export default function Navbar() {
               </MenuList>
             </Menu>
           ) : (
-            <Button
-              as={NextLink}
-              href="/login"
-              display={{ base: 'none', md: 'inline-flex' }}
-              fontSize={'sm'}
-              fontWeight={600}
-              color={'white'}
-              bg={'blue.400'}
-              _hover={{
-                bg: 'blue.300',
-              }}
-            >
-              Sign In
-            </Button>
+            <Stack direction={'row'} spacing={3}>
+              <Button
+                as={NextLink}
+                href="/register"
+                display={{ base: 'none', md: 'inline-flex' }}
+                fontSize={'sm'}
+                fontWeight={400}
+                variant={'outline'}
+                colorScheme={'blue'}
+              >
+                Register
+              </Button>
+              <Button
+                as={NextLink}
+                href="/login"
+                display={{ base: 'none', md: 'inline-flex' }}
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'blue.400'}
+                _hover={{
+                  bg: 'blue.300',
+                }}
+              >
+                Sign In
+              </Button>
+            </Stack>
           )}
         </Stack>
       </Flex>
