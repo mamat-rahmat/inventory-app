@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db/neon';
+import { executeQuery } from '@/lib/db/neon';
 
 // POST /api/init-db - Initialize database with schema and sample data
 export async function POST() {
   try {
     // Create users table
-    await sql`
+    await executeQuery(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -15,10 +15,10 @@ export async function POST() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
+    `);
 
     // Create inventory_items table
-    await sql`
+    await executeQuery(`
       CREATE TABLE IF NOT EXISTS inventory_items (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -32,22 +32,22 @@ export async function POST() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
       )
-    `;
+    `);
 
     // Create indexes
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id)`;
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id)');
 
     // Insert default admin user (password: 'password' - hashed with bcrypt)
-    await sql`
+    await executeQuery(`
       INSERT INTO users (email, password_hash, name, role) 
       VALUES ('admin@example.com', '$2b$10$rQZ9QmjytWzQgwjvtpfzKOXbnon9hGrVhGGGGGGGGGGGGGGGGGGGGG', 'Admin User', 'admin')
       ON CONFLICT (email) DO NOTHING
-    `;
+    `);
 
     // Insert sample inventory items
-    await sql`
+    await executeQuery(`
       INSERT INTO inventory_items (name, sku, category, quantity, price, description, status, user_id) VALUES
       ('Laptop Computer', 'LAP-001', 'Electronics', 25, 999.99, 'High-performance laptop for business use', 'In Stock', 1),
       ('Office Chair', 'CHR-001', 'Furniture', 15, 299.99, 'Ergonomic office chair with lumbar support', 'In Stock', 1),
@@ -55,7 +55,7 @@ export async function POST() {
       ('Desk Lamp', 'LMP-001', 'Furniture', 8, 79.99, 'LED desk lamp with adjustable brightness', 'Low Stock', 1),
       ('Notebook', 'NTB-001', 'Stationery', 100, 4.99, 'Spiral-bound notebook, 200 pages', 'In Stock', 1)
       ON CONFLICT (sku) DO NOTHING
-    `;
+    `);
 
     return NextResponse.json({ 
       message: 'Database initialized successfully',

@@ -1,4 +1,4 @@
-import { sql } from './neon';
+import { sql, executeQuery } from './neon';
 
 // Types for our database entities
 export interface User {
@@ -32,7 +32,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       FROM users 
       WHERE email = ${email}
     `;
-    return result[0] || null;
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Error fetching user by email:', error);
     throw error;
@@ -46,7 +46,7 @@ export async function createUser(email: string, passwordHash: string, name: stri
       VALUES (${email}, ${passwordHash}, ${name}, ${role})
       RETURNING id, email, name, role, created_at, updated_at
     `;
-    return result[0];
+    return result.rows[0];
   } catch (error) {
     console.error('Error creating user:', error);
     throw error;
@@ -69,7 +69,7 @@ export async function getAllInventoryItems(userId?: number): Promise<InventoryIt
         ORDER BY created_at DESC
       `;
     }
-    return result;
+    return result.rows;
   } catch (error) {
     console.error('Error fetching inventory items:', error);
     throw error;
@@ -82,7 +82,7 @@ export async function getInventoryItemById(id: number): Promise<InventoryItem | 
       SELECT * FROM inventory_items 
       WHERE id = ${id}
     `;
-    return result[0] || null;
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Error fetching inventory item by id:', error);
     throw error;
@@ -96,7 +96,7 @@ export async function createInventoryItem(item: Omit<InventoryItem, 'id' | 'crea
       VALUES (${item.name}, ${item.sku}, ${item.category}, ${item.quantity}, ${item.price}, ${item.description || ''}, ${item.status}, ${item.user_id})
       RETURNING *
     `;
-    return result[0];
+    return result.rows[0];
   } catch (error) {
     console.error('Error creating inventory item:', error);
     throw error;
@@ -105,22 +105,24 @@ export async function createInventoryItem(item: Omit<InventoryItem, 'id' | 'crea
 
 export async function updateInventoryItem(id: number, updates: Partial<Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>>): Promise<InventoryItem | null> {
   try {
-    const setClause = Object.entries(updates)
-      .filter(([_, value]) => value !== undefined)
-      .map(([key, _]) => `${key} = $${key}`)
-      .join(', ');
+    const fields = Object.keys(updates).filter(key => updates[key as keyof typeof updates] !== undefined);
     
-    if (!setClause) {
+    if (fields.length === 0) {
       throw new Error('No valid updates provided');
     }
 
-    const result = await sql`
+    const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+    const values = [id, ...fields.map(field => updates[field as keyof typeof updates])];
+    
+    const query = `
       UPDATE inventory_items 
-      SET ${sql.unsafe(setClause)}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
       RETURNING *
     `;
-    return result[0] || null;
+    
+    const result = await executeQuery(query, values);
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Error updating inventory item:', error);
     throw error;
@@ -133,7 +135,7 @@ export async function deleteInventoryItem(id: number): Promise<boolean> {
       DELETE FROM inventory_items 
       WHERE id = ${id}
     `;
-    return result.count > 0;
+    return (result.rowCount || 0) > 0;
   } catch (error) {
     console.error('Error deleting inventory item:', error);
     throw error;
@@ -142,22 +144,26 @@ export async function deleteInventoryItem(id: number): Promise<boolean> {
 
 export async function searchInventoryItems(searchTerm: string, category?: string, userId?: number): Promise<InventoryItem[]> {
   try {
-    let query = sql`
+    let queryText = `
       SELECT * FROM inventory_items 
-      WHERE (name ILIKE ${`%${searchTerm}%`} OR sku ILIKE ${`%${searchTerm}%`} OR description ILIKE ${`%${searchTerm}%`})
+      WHERE (name ILIKE $1 OR sku ILIKE $1 OR description ILIKE $1)
     `;
+    let params = [`%${searchTerm}%`];
     
     if (category) {
-      query = sql`${query} AND category = ${category}`;
+      queryText += ` AND category = $${params.length + 1}`;
+      params.push(category);
     }
     
     if (userId) {
-      query = sql`${query} AND user_id = ${userId}`;
+      queryText += ` AND user_id = $${params.length + 1}`;
+      params.push(userId.toString());
     }
     
-    query = sql`${query} ORDER BY created_at DESC`;
+    queryText += ` ORDER BY created_at DESC`;
     
-    return await query;
+    const result = await executeQuery(queryText, params);
+    return result.rows;
   } catch (error) {
     console.error('Error searching inventory items:', error);
     throw error;
@@ -173,22 +179,25 @@ export async function getInventoryStats(userId?: number): Promise<{
 }> {
   try {
     let whereClause = '';
+    let params: any[] = [];
+    
     if (userId) {
-      whereClause = `WHERE user_id = ${userId}`;
+      whereClause = 'WHERE user_id = $1';
+      params = [userId];
     }
 
     const [totalResult, valueResult, lowStockResult, categoriesResult] = await Promise.all([
-      sql`SELECT COUNT(*) as count FROM inventory_items ${sql.unsafe(whereClause)}`,
-      sql`SELECT SUM(quantity * price) as total FROM inventory_items ${sql.unsafe(whereClause)}`,
-      sql`SELECT COUNT(*) as count FROM inventory_items ${sql.unsafe(whereClause)} ${sql.unsafe(whereClause ? 'AND' : 'WHERE')} quantity < 10`,
-      sql`SELECT COUNT(DISTINCT category) as count FROM inventory_items ${sql.unsafe(whereClause)}`
+      executeQuery(`SELECT COUNT(*) as count FROM inventory_items ${whereClause}`, params),
+      executeQuery(`SELECT SUM(quantity * price) as total FROM inventory_items ${whereClause}`, params),
+      executeQuery(`SELECT COUNT(*) as count FROM inventory_items ${whereClause} ${whereClause ? 'AND' : 'WHERE'} quantity < 10`, params),
+      executeQuery(`SELECT COUNT(DISTINCT category) as count FROM inventory_items ${whereClause}`, params)
     ]);
 
     return {
-      totalItems: parseInt(totalResult[0]?.count || '0'),
-      totalValue: parseFloat(valueResult[0]?.total || '0'),
-      lowStockItems: parseInt(lowStockResult[0]?.count || '0'),
-      categories: parseInt(categoriesResult[0]?.count || '0')
+      totalItems: parseInt(totalResult.rows[0]?.count || '0'),
+      totalValue: parseFloat(valueResult.rows[0]?.total || '0'),
+      lowStockItems: parseInt(lowStockResult.rows[0]?.count || '0'),
+      categories: parseInt(categoriesResult.rows[0]?.count || '0')
     };
   } catch (error) {
     console.error('Error fetching inventory stats:', error);
@@ -200,7 +209,7 @@ export async function getInventoryStats(userId?: number): Promise<{
 export async function initializeDatabase(): Promise<void> {
   try {
     // Create users table
-    await sql`
+    await executeQuery(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -210,10 +219,10 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
+    `);
 
     // Create inventory_items table
-    await sql`
+    await executeQuery(`
       CREATE TABLE IF NOT EXISTS inventory_items (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -227,12 +236,12 @@ export async function initializeDatabase(): Promise<void> {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
       )
-    `;
+    `);
 
     // Create indexes
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id)`;
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_sku ON inventory_items(sku)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category)');
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id)');
 
     console.log('Database initialized successfully');
   } catch (error) {

@@ -14,9 +14,11 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@neondatabase/serverless": "^1.0.1",
+    "@types/pg": "^8.15.5",
     "framer-motion": "^12.23.12",
     "next": "15.4.5",
     "next-auth": "^4.24.11",
+    "pg": "^8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },

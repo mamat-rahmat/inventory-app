@@ -1,21 +1,49 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { Pool, PoolClient } from 'pg';
 
-// Optional: Set the WebSocket proxy to work around corporate firewalls
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(neonConfig as any).webSocketProxy = (host: string) => {
-  return `wss://proxy.neon.tech/v2?host=${host}`;
-};
+// Create a connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL!,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-// Use the environment variable for the connection string
-export const sql = neon(process.env.DATABASE_URL!);
+// Template literal function for SQL queries (similar to neon's sql``)
+export function sql(strings: TemplateStringsArray, ...values: any[]) {
+  let query = '';
+  const params: any[] = [];
+  
+  for (let i = 0; i < strings.length; i++) {
+    query += strings[i];
+    if (i < values.length) {
+      params.push(values[i]);
+      query += `$${params.length}`;
+    }
+  }
+  
+  return pool.query(query, params);
+}
 
-// Example query function
-export async function executeQuery(query: string) {
+// Direct query function
+export async function executeQuery(query: string, params?: any[]) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return await (sql as any)(query);
+    const result = await pool.query(query, params);
+    return result.rows;
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
   }
+}
+
+// Get a client from the pool for transactions
+export async function getClient(): Promise<PoolClient> {
+  return await pool.connect();
+}
+
+// Close the pool (for cleanup)
+export async function closePool() {
+  await pool.end();
 }
