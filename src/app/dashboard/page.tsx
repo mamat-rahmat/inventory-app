@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -17,19 +17,59 @@ import {
   CardBody,
   Flex,
   Button,
+  useToast,
 } from '@chakra-ui/react';
+
+// Interface for dashboard statistics
+interface DashboardStats {
+  totalItems: number;
+  totalValue: number;
+  lowStockItems: number;
+  categories: number;
+}
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const toast = useToast();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dashboard statistics
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/inventory?stats=true');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch statistics');
+      }
+      
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load dashboard statistics',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
+    } else if (status === 'authenticated') {
+      fetchStats();
     }
   }, [status, router]);
 
-  if (status === 'loading') {
+  if (status === 'loading' || loading) {
     return (
       <Container centerContent py={10}>
         <Text>Loading...</Text>
@@ -53,22 +93,27 @@ export default function DashboardPage() {
         </Button>
       </Flex>
 
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
+      <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6} mb={8}>
         <StatCard 
           title="Total Items" 
-          value="124" 
-          change="+5% from last month" 
+          value={stats?.totalItems.toString() || '0'} 
+          change={`${stats?.categories || 0} categories`} 
+        />
+        <StatCard 
+          title="Total Value" 
+          value={`$${stats?.totalValue.toFixed(2) || '0.00'}`} 
+          change="Inventory value" 
         />
         <StatCard 
           title="Low Stock Items" 
-          value="12" 
-          change="-2 from yesterday" 
-          isWarning 
+          value={stats?.lowStockItems.toString() || '0'} 
+          change="Items below 10 units" 
+          isWarning={stats ? stats.lowStockItems > 0 : false} 
         />
         <StatCard 
-          title="Recent Orders" 
-          value="28" 
-          change="+12% from last week" 
+          title="Categories" 
+          value={stats?.categories.toString() || '0'} 
+          change="Product categories" 
         />
       </SimpleGrid>
 

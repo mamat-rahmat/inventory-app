@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
@@ -25,64 +25,65 @@ import {
   useToast,
 } from '@chakra-ui/react';
 
-// Mock data for inventory items
-const mockInventoryItems = [
-  {
-    id: '1',
-    name: 'Product A',
-    sku: 'SKU001',
-    category: 'Electronics',
-    quantity: 25,
-    price: 99.99,
-    status: 'In Stock',
-  },
-  {
-    id: '2',
-    name: 'Product B',
-    sku: 'SKU002',
-    category: 'Office Supplies',
-    quantity: 50,
-    price: 19.99,
-    status: 'In Stock',
-  },
-  {
-    id: '3',
-    name: 'Product C',
-    sku: 'SKU003',
-    category: 'Furniture',
-    quantity: 5,
-    price: 299.99,
-    status: 'Low Stock',
-  },
-  {
-    id: '4',
-    name: 'Product D',
-    sku: 'SKU004',
-    category: 'Electronics',
-    quantity: 0,
-    price: 149.99,
-    status: 'Out of Stock',
-  },
-  {
-    id: '5',
-    name: 'Product E',
-    sku: 'SKU005',
-    category: 'Office Supplies',
-    quantity: 100,
-    price: 9.99,
-    status: 'In Stock',
-  },
-];
+// Interface for inventory items
+interface InventoryItem {
+  id: number;
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  price: number;
+  description?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user_id: number;
+}
 
 export default function InventoryPage() {
   const { status } = useSession();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [inventoryItems, setInventoryItems] = useState(mockInventoryItems);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
-  if (status === 'loading') {
+  // Fetch inventory items from API
+  const fetchInventoryItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/inventory');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory items');
+      }
+      
+      const data = await response.json();
+      setInventoryItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast({
+        title: 'Error',
+        description: 'Failed to load inventory items',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchInventoryItems();
+    }
+  }, [status]);
+
+  if (status === 'loading' || loading) {
     return (
       <Container centerContent py={10}>
         <Text>Loading...</Text>
@@ -106,14 +107,32 @@ export default function InventoryPage() {
 
   const categories = [...new Set(inventoryItems.map(item => item.category))];
 
-  const handleDelete = (id: string) => {
-    setInventoryItems(items => items.filter(item => item.id !== id));
-    toast({
-      title: 'Item deleted',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`/api/inventory/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete item');
+      }
+      
+      setInventoryItems(items => items.filter(item => item.id !== id));
+      toast({
+        title: 'Item deleted',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete item',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {

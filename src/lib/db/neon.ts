@@ -6,11 +6,8 @@ import { neon, neonConfig } from '@neondatabase/serverless';
   return `wss://proxy.neon.tech/v2?host=${host}`;
 };
 
-// In a real application, you would use an environment variable for the connection string
-// export const sql = neon(process.env.DATABASE_URL!);
-
-// For development purposes, we'll use a placeholder
-export const sql = neon('postgresql://user:password@localhost:5432/inventory');
+// Use the environment variable for the connection string
+export const sql = neon(process.env.DATABASE_URL!);
 
 // Example query function
 export async function executeQuery(query: string) {

@@ -129,9 +129,27 @@ export default function AddInventoryItemPage() {
     setIsSubmitting(true);
     
     try {
-      // In a real application, you would send this data to your API
-      // For now, we'll just simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          sku: formData.sku,
+          category: formData.category,
+          quantity: formData.quantity,
+          price: formData.price,
+          description: formData.description,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add item');
+      }
+      
+      const newItem = await response.json();
       
       toast({
         title: 'Item added',
@@ -146,7 +164,7 @@ export default function AddInventoryItemPage() {
       console.error('Error adding item:', error);
       toast({
         title: 'Error',
-        description: 'Failed to add item. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to add item. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
