@@ -1,0 +1,55 @@
+<svg width="500" height="400" viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background elements -->
+  <rect x="50" y="50" width="400" height="300" rx="20" fill="#F0F9FF" />
+  
+  <!-- Shelves -->
+  <rect x="100" y="100" width="300" height="20" rx="5" fill="#90CDF4" />
+  <rect x="100" y="180" width="300" height="20" rx="5" fill="#90CDF4" />
+  <rect x="100" y="260" width="300" height="20" rx="5" fill="#90CDF4" />
+  
+  <!-- Shelf supports -->
+  <rect x="120" y="120" width="10" height="60" fill="#63B3ED" />
+  <rect x="370" y="120" width="10" height="60" fill="#63B3ED" />
+  <rect x="120" y="200" width="10" height="60" fill="#63B3ED" />
+  <rect x="370" y="200" width="10" height="60" fill="#63B3ED" />
+  
+  <!-- Items on shelves -->
+  <!-- Top shelf -->
+  <rect x="140" y="70" width="40" height="30" rx="5" fill="#4299E1" />
+  <rect x="190" y="60" width="30" height="40" rx="5" fill="#3182CE" />
+  <rect x="230" y="70" width="50" height="30" rx="5" fill="#2B6CB0" />
+  <rect x="290" y="65" width="35" height="35" rx="5" fill="#2C5282" />
+  <rect x="335" y="75" width="45" height="25" rx="5" fill="#4299E1" />
+  
+  <!-- Middle shelf -->
+  <rect x="150" y="130" width="30" height="50" rx="5" fill="#F6AD55" />
+  <rect x="190" y="140" width="40" height="40" rx="5" fill="#ED8936" />
+  <rect x="240" y="150" width="35" height="30" rx="5" fill="#DD6B20" />
+  <rect x="285" y="135" width="25" height="45" rx="5" fill="#C05621" />
+  <rect x="320" y="145" width="40" height="35" rx="5" fill="#F6AD55" />
+  
+  <!-- Bottom shelf -->
+  <rect x="130" y="210" width="45" height="50" rx="5" fill="#68D391" />
+  <rect x="185" y="220" width="35" height="40" rx="5" fill="#48BB78" />
+  <rect x="230" y="215" width="50" height="45" rx="5" fill="#38A169" />
+  <rect x="290" y="225" width="30" height="35" rx="5" fill="#2F855A" />
+  <rect x="330" y="210" width="40" height="50" rx="5" fill="#68D391" />
+  
+  <!-- Person with clipboard -->
+  <!-- Body -->
+  <circle cx="75" cy="280" r="25" fill="#4A5568" />
+  <rect x="60" y="305" width="30" height="50" rx="10" fill="#4A5568" />
+  <!-- Arms -->
+  <rect x="90" y="315" width="40" height="10" rx="5" fill="#4A5568" />
+  <rect x="20" y="315" width="40" height="10" rx="5" fill="#4A5568" />
+  <!-- Clipboard -->
+  <rect x="20" y="290" width="30" height="40" rx="5" fill="#E2E8F0" />
+  <rect x="25" y="300" width="20" height="2" fill="#A0AEC0" />
+  <rect x="25" y="310" width="20" height="2" fill="#A0AEC0" />
+  <rect x="25" y="320" width="20" height="2" fill="#A0AEC0" />
+  
+  <!-- Decorative elements -->
+  <circle cx="450" cy="80" r="15" fill="#BEE3F8" opacity="0.6" />
+  <circle cx="430" cy="320" r="20" fill="#BEE3F8" opacity="0.6" />
+  <circle cx="50" cy="200" r="25" fill="#BEE3F8" opacity="0.6" />
+</svg>
