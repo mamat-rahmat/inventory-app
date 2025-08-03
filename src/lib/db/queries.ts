@@ -122,7 +122,7 @@ export async function updateInventoryItem(id: number, updates: Partial<Omit<Inve
     `;
     
     const result = await executeQuery(query, values);
-    return result.rows[0] || null;
+    return result[0] || null;
   } catch (error) {
     console.error('Error updating inventory item:', error);
     throw error;
@@ -148,7 +148,7 @@ export async function searchInventoryItems(searchTerm: string, category?: string
       SELECT * FROM inventory_items 
       WHERE (name ILIKE $1 OR sku ILIKE $1 OR description ILIKE $1)
     `;
-    let params = [`%${searchTerm}%`];
+    const params = [`%${searchTerm}%`];
     
     if (category) {
       queryText += ` AND category = $${params.length + 1}`;
@@ -163,7 +163,7 @@ export async function searchInventoryItems(searchTerm: string, category?: string
     queryText += ` ORDER BY created_at DESC`;
     
     const result = await executeQuery(queryText, params);
-    return result.rows;
+    return result;
   } catch (error) {
     console.error('Error searching inventory items:', error);
     throw error;
@@ -179,7 +179,7 @@ export async function getInventoryStats(userId?: number): Promise<{
 }> {
   try {
     let whereClause = '';
-    let params: any[] = [];
+    let params: unknown[] = [];
     
     if (userId) {
       whereClause = 'WHERE user_id = $1';
@@ -194,10 +194,10 @@ export async function getInventoryStats(userId?: number): Promise<{
     ]);
 
     return {
-      totalItems: parseInt(totalResult.rows[0]?.count || '0'),
-      totalValue: parseFloat(valueResult.rows[0]?.total || '0'),
-      lowStockItems: parseInt(lowStockResult.rows[0]?.count || '0'),
-      categories: parseInt(categoriesResult.rows[0]?.count || '0')
+      totalItems: parseInt(totalResult[0]?.count || '0'),
+      totalValue: parseFloat(valueResult[0]?.total || '0'),
+      lowStockItems: parseInt(lowStockResult[0]?.count || '0'),
+      categories: parseInt(categoriesResult[0]?.count || '0')
     };
   } catch (error) {
     console.error('Error fetching inventory stats:', error);

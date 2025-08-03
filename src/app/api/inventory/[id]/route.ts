@@ -6,7 +6,7 @@ import { getInventoryItemById, updateInventoryItem, deleteInventoryItem } from '
 // GET /api/inventory/[id] - Get specific inventory item
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +15,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid item ID' }, { status: 400 });
     }
@@ -39,7 +40,7 @@ export async function GET(
 // PUT /api/inventory/[id] - Update inventory item
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -48,7 +49,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid item ID' }, { status: 400 });
     }
@@ -57,7 +59,15 @@ export async function PUT(
     const { name, sku, category, quantity, price, description } = body;
 
     // Prepare updates object
-    const updates: any = {};
+    const updates: Partial<{
+      name: string;
+      sku: string;
+      category: string;
+      quantity: number;
+      price: number;
+      description: string;
+      status: string;
+    }> = {};
     if (name !== undefined) updates.name = name;
     if (sku !== undefined) updates.sku = sku;
     if (category !== undefined) updates.category = category;
@@ -103,7 +113,7 @@ export async function PUT(
 // DELETE /api/inventory/[id] - Delete inventory item
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -112,7 +122,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid item ID' }, { status: 400 });
     }

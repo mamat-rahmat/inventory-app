@@ -17,31 +17,32 @@ declare module 'next-auth/jwt' {
   }
 }
 
-// Inventory item type
+// Inventory item type (matches database schema)
 export interface InventoryItem {
-  id: string;
+  id: number;
   name: string;
   sku: string;
   category: string;
   quantity: number;
   price: number;
   description?: string;
-  status?: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  createdAt?: Date;
-  updatedAt?: Date;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user_id: number;
 }
 
 // Database schema types
 export interface UserRecord {
-  id: string;
+  id: number;
   name: string;
   email: string;
   password?: string; // Hashed password
   role: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface InventoryRecord extends InventoryItem {
-  userId: string; // Reference to the user who created/owns the item
+  user_id: number; // Reference to the user who created/owns the item
 }

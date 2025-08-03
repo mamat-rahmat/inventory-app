@@ -149,7 +149,7 @@ export default function AddInventoryItemPage() {
         throw new Error(errorData.error || 'Failed to add item');
       }
       
-      const newItem = await response.json();
+      await response.json();
       
       toast({
         title: 'Item added',

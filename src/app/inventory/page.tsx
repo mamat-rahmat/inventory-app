@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
@@ -47,14 +47,12 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
   // Fetch inventory items from API
-  const fetchInventoryItems = async () => {
+  const fetchInventoryItems = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await fetch('/api/inventory');
       
       if (!response.ok) {
@@ -63,8 +61,7 @@ export default function InventoryPage() {
       
       const data = await response.json();
       setInventoryItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load inventory items',
@@ -75,13 +72,13 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchInventoryItems();
     }
-  }, [status]);
+  }, [status, fetchInventoryItems]);
 
   if (status === 'loading' || loading) {
     return (
@@ -124,7 +121,7 @@ export default function InventoryPage() {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to delete item',
@@ -207,7 +204,7 @@ export default function InventoryPage() {
                   <Td>{item.sku}</Td>
                   <Td>{item.category}</Td>
                   <Td isNumeric>{item.quantity}</Td>
-                  <Td isNumeric>${item.price.toFixed(2)}</Td>
+                  <Td isNumeric>${Number(item.price).toFixed(2)}</Td>
                   <Td>
                     <Badge colorScheme={getStatusColor(item.status)}>
                       {item.status}

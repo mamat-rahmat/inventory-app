@@ -12,9 +12,9 @@ const pool = new Pool({
 });
 
 // Template literal function for SQL queries (similar to neon's sql``)
-export function sql(strings: TemplateStringsArray, ...values: any[]) {
+export function sql(strings: TemplateStringsArray, ...values: unknown[]) {
   let query = '';
-  const params: any[] = [];
+  const params: unknown[] = [];
   
   for (let i = 0; i < strings.length; i++) {
     query += strings[i];
@@ -28,7 +28,7 @@ export function sql(strings: TemplateStringsArray, ...values: any[]) {
 }
 
 // Direct query function
-export async function executeQuery(query: string, params?: any[]) {
+export async function executeQuery(query: string, params?: unknown[]) {
   try {
     const result = await pool.query(query, params);
     return result.rows;

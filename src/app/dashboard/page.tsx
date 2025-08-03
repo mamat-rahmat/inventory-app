@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   // Fetch dashboard statistics
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/inventory?stats=true');
@@ -59,7 +59,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -67,7 +67,7 @@ export default function DashboardPage() {
     } else if (status === 'authenticated') {
       fetchStats();
     }
-  }, [status, router]);
+  }, [status, router, fetchStats]);
 
   if (status === 'loading' || loading) {
     return (
